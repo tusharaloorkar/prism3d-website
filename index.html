@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prism3D — Crafted Layer by Layer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ──────────────────── RESET & BASE ──────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:      #f0f9ff;
+      --surface: #ffffff;
+      --border:  rgba(14,165,233,.14);
+      --text:    #0f172a;
+      --muted:   #64748b;
+      --purple:  #0ea5e9;
+      --violet:  #38bdf8;
+      --cyan:    #ec4899;
+      --pink:    #f9a8d4;
+      --gold:    #fbbf24;
+      --ff-body: 'Space Grotesk', sans-serif;
+      --ff-mono: 'Space Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ff-body);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ──────────────────── NOISE OVERLAY ──────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.022;
+      pointer-events: none;
+      z-index: 9997;
+    }
+
+    /* ──────────────────── CURSOR ──────────────────── */
+    #cur-dot {
+      position: fixed; width: 8px; height: 8px;
+      background: var(--purple); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      mix-blend-mode: multiply;
+      transition: width .15s, height .15s, background .2s;
+    }
+    #cur-ring {
+      position: fixed; width: 36px; height: 36px;
+      border: 1px solid rgba(14,165,233,.5); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      mix-blend-mode: multiply;
+      transition: width .2s, height .2s, border-color .2s;
+    }
+    body:has(a:hover) #cur-dot,
+    body:has(button:hover) #cur-dot { width: 16px; height: 16px; background: var(--cyan); }
+    body:has(a:hover) #cur-ring,
+    body:has(button:hover) #cur-ring { width: 56px; height: 56px; border-color: rgba(236,72,153,.5); }
+
+
+    /* ──────────────────── NAV ──────────────────── */
+    #nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      padding: 22px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(240,249,255,.82); backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--border);
+      transform: translateY(-100%);
+      transition: transform .7s cubic-bezier(.16,1,.3,1), background .3s, box-shadow .3s;
+    }
+    #nav.show { transform: translateY(0); }
+    #nav.scrolled { background: rgba(240,249,255,.95); box-shadow: 0 1px 24px rgba(14,165,233,.1); }
+    .nav-brand {
+      text-decoration: none; display: flex; align-items: center;
+    }
+    .nav-logo-img {
+      height: 42px; width: auto; display: block;
+      filter: drop-shadow(0 2px 8px rgba(14,165,233,.18));
+      transition: filter .3s, opacity .3s;
+    }
+    .nav-brand:hover .nav-logo-img {
+      filter: drop-shadow(0 2px 14px rgba(14,165,233,.35));
+      opacity: .9;
+    }
+    .nav-links { list-style: none; display: flex; gap: 36px; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: .78rem; letter-spacing: .18em; text-transform: uppercase; transition: color .25s; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ──────────────────── HERO ──────────────────── */
+    #hero {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    .hero-body {
+      position: relative; z-index: 10;
+      text-align: center; padding: 0 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 0;
+    }
+
+    /* Hero logo */
+    .hero-logo {
+      margin-bottom: 40px;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+    .hero-logo.in { opacity: 1; }
+    .hero-logo-img {
+      width: 220px; height: auto; display: block;
+      animation: heroFloat 5s ease-in-out infinite;
+      filter: drop-shadow(0 8px 28px rgba(14,165,233,.22)) drop-shadow(0 2px 8px rgba(236,72,153,.15));
+    }
+    @keyframes heroFloat {
+      0%,100% { transform: translateY(0);   box-shadow: 0 0 60px rgba(56,189,248,.38), 0 0 110px rgba(236,72,153,.12); }
+      50%      { transform: translateY(-10px); box-shadow: 0 14px 80px rgba(56,189,248,.55), 0 0 140px rgba(236,72,153,.22); }
+    }
+
+    .hero-eyebrow {
+      font-family: var(--ff-mono); font-size: .7rem; letter-spacing: .45em;
+      text-transform: uppercase; color: var(--cyan);
+      opacity: 0; transform: translateY(10px);
+      transition: opacity .7s ease, transform .7s ease;
+      margin-bottom: 32px;
+    }
+    .hero-eyebrow.in { opacity: 1; transform: translateY(0); }
+
+    .hero-title {
+      font-size: clamp(5rem, 14vw, 10rem);
+      font-weight: 700; line-height: .88; letter-spacing: -.03em;
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .hero-word { overflow: hidden; display: block; }
+    .hero-word span {
+      display: block;
+      transform: translateY(115%);
+      transition: transform .9s cubic-bezier(.16,1,.3,1);
+    }
+    .hero-word span.in { transform: translateY(0); }
+    .grad { background: linear-gradient(135deg, var(--violet) 0%, var(--cyan) 55%, var(--pink) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200%; animation: gshift 5s ease infinite; }
+    @keyframes gshift { 0%,100% { background-position:0% 50%; } 50% { background-position:100% 50%; } }
+
+    .hero-tagline {
+      font-family: var(--ff-mono); font-size: clamp(.8rem,1.5vw,1rem);
+      letter-spacing: .35em; text-transform: uppercase; color: var(--muted);
+      opacity: 0; transition: opacity .9s ease;
+      margin-bottom: 60px;
+    }
+    .hero-tagline.in { opacity: 1; }
+
+    .hero-cta {
+      display: flex; align-items: center; gap: 14px;
+      font-family: var(--ff-mono); font-size: .72rem;
+      letter-spacing: .22em; text-transform: uppercase; color: var(--muted);
+      opacity: 0; animation: none;
+    }
+    .hero-cta.in { animation: fadeIn 1s ease .2s forwards; }
+    @keyframes fadeIn { to { opacity: 1; } }
+    .scan-line {
+      width: 50px; height: 1px; background: var(--muted);
+      position: relative; overflow: hidden;
+    }
+    .scan-line::after {
+      content: ''; position: absolute; left: -100%; top: 0; width: 100%; height: 100%;
+      background: var(--cyan); animation: scan 2.2s ease-in-out infinite;
+    }
+    @keyframes scan { to { left: 100%; } }
+
+    /* ──────────────────── SECTION SHARED ──────────────────── */
+    .section { padding: 120px 48px; max-width: 1200px; margin: 0 auto; }
+    .section-wide { padding: 120px 48px; }
+
+    .lbl {
+      font-family: var(--ff-mono); font-size: .68rem; letter-spacing: .42em;
+      text-transform: uppercase; color: var(--violet); margin-bottom: 14px;
+    }
+    .stitle { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: -.02em; line-height: 1.1; margin-bottom: 20px; }
+    .sbody  { font-size: 1.05rem; line-height: 1.85; color: var(--muted); max-width: 560px; }
+
+    .reveal { opacity: 0; transform: translateY(36px); transition: opacity .8s ease, transform .8s ease; }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+
+    /* ──────────────────── ABOUT ──────────────────── */
+    #about { max-width: 820px; margin: 0 auto; }
+    .about-lead { margin-bottom: 52px; }
+
+    .about-cats {
+      display: flex; flex-wrap: wrap; gap: 14px;
+    }
+    .acat {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 22px; border: 1px solid var(--border);
+      border-radius: 40px; background: var(--surface);
+      font-size: .92rem; font-weight: 500;
+      transition: border-color .25s, transform .25s, box-shadow .25s;
+    }
+    .acat:hover {
+      border-color: var(--purple); transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(14,165,233,.12);
+    }
+    .acat span { font-size: 1.1rem; }
+
+    /* ──────────────────── PROCESS ──────────────────── */
+    #process { background: var(--surface); }
+    #process .inner { max-width: 1200px; margin: 0 auto; }
+
+    .p-list { margin-top: 60px; }
+    .p-item {
+      display: grid; grid-template-columns: 72px 1fr auto; gap: 36px; align-items: center;
+      padding: 36px 0; border-top: 1px solid var(--border);
+      opacity: 0; transform: translateX(-28px);
+      transition: opacity .65s ease, transform .65s ease, background .2s;
+    }
+    .p-item:last-child { border-bottom: 1px solid var(--border); }
+    .p-item.in { opacity: 1; transform: translateX(0); }
+    .p-item:hover { background: rgba(14,165,233,.04); padding-left: 12px; transition: padding-left .3s ease, background .3s; }
+
+    .p-num { font-family: var(--ff-mono); font-size: 2.6rem; font-weight: 700; color: rgba(255,255,255,.06); line-height: 1; }
+    .p-item:hover .p-num { color: rgba(14,165,233,.25); }
+    .p-info h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 6px; }
+    .p-info p  { font-size: .9rem; color: var(--muted); line-height: 1.65; }
+    .p-tag {
+      font-family: var(--ff-mono); font-size: .65rem; letter-spacing: .2em;
+      text-transform: uppercase; padding: 7px 14px; border: 1px solid var(--border);
+      color: var(--muted); white-space: nowrap;
+    }
+
+    /* ──────────────────── WHAT WE DO ──────────────────── */
+    #pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); }
+    .pillar {
+      background: var(--bg); padding: 48px 36px;
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .7s ease, transform .7s ease, background .25s;
+    }
+    .pillar.in { opacity: 1; transform: translateY(0); }
+    .pillar:hover { background: var(--surface); }
+    .pillar-icon { font-size: 2rem; margin-bottom: 20px; }
+    .pillar h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
+    .pillar p  { font-size: .88rem; color: var(--muted); line-height: 1.7; }
+    .pillar-line {
+      width: 32px; height: 2px; margin-top: 24px;
+      background: linear-gradient(90deg, var(--violet), var(--cyan));
+    }
+
+    /* ──────────────────── COMING SOON ──────────────────── */
+    #cs {
+      text-align: center; padding: 140px 48px; position: relative; overflow: hidden;
+    }
+    #cs::before {
+      content: '';
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(14,165,233,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cs-badge {
+      display: inline-block; padding: 7px 20px;
+      border: 1px solid rgba(56,189,248,.4); color: var(--violet);
+      font-family: var(--ff-mono); font-size: .68rem; letter-spacing: .4em;
+      text-transform: uppercase; margin-bottom: 48px;
+      position: relative; overflow: hidden;
+    }
+    .cs-badge::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(56,189,248,.15), transparent);
+      transform: translateX(-100%); animation: sweep 2.5s ease infinite;
+    }
+    @keyframes sweep { to { transform: translateX(100%); } }
+
+    .cs-h {
+      font-size: clamp(2.8rem, 7vw, 5.5rem); font-weight: 700;
+      line-height: 1.0; letter-spacing: -.03em; margin-bottom: 28px;
+    }
+    .cs-sub { font-size: 1.05rem; color: var(--muted); line-height: 1.75; max-width: 480px; margin: 0 auto 72px; }
+
+    .cs-grid { display: flex; justify-content: center; gap: 72px; flex-wrap: wrap; }
+    .cs-stat { text-align: center; }
+    .cs-num {
+      font-size: 3rem; font-weight: 700; line-height: 1;
+      background: linear-gradient(135deg, var(--violet), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .cs-label { font-family: var(--ff-mono); font-size: .67rem; letter-spacing: .32em; text-transform: uppercase; color: var(--muted); }
+
+    /* ──────────────────── WHY STRIP ──────────────────── */
+    #why-strip {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .why-item {
+      padding: 44px 32px; display: flex; flex-direction: column; gap: 10px;
+      border-right: 1px solid var(--border);
+      transition: background .25s;
+    }
+    .why-item:last-child { border-right: none; }
+    .why-item:hover { background: rgba(14,165,233,.04); }
+    .why-icon { font-size: 1.4rem; color: var(--violet); }
+    .why-item strong { font-size: 1rem; font-weight: 600; }
+    .why-item span { font-size: .88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ──────────────────── FOOTER ──────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 48px; max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .f-brand { font-size: .95rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .f-brand span { background: linear-gradient(135deg, var(--violet), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .f-copy  { font-family: var(--ff-mono); font-size: .65rem; color: var(--muted); letter-spacing: .1em; }
+    .f-tag   { font-family: var(--ff-mono); font-size: .65rem; color: var(--muted); letter-spacing: .22em; font-style: italic; }
+
+    /* ──────────────────── RESPONSIVE ──────────────────── */
+    @media (max-width: 900px) {
+      #about { max-width: 100%; }
+      #pillars { grid-template-columns: 1fr; }
+      #why-strip { grid-template-columns: 1fr 1fr; }
+      .why-item { border-bottom: 1px solid var(--border); }
+      .p-item { grid-template-columns: 56px 1fr; }
+      .p-tag { display: none; }
+      footer { flex-direction: column; gap: 14px; text-align: center; }
+    }
+    @media (max-width: 640px) {
+      #nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      .section { padding: 80px 24px; }
+      .section-wide { padding: 80px 24px; }
+      #cs { padding: 100px 24px; }
+      .cs-grid { gap: 40px; }
+      #why-strip { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-brand" href="#"><img src="logo_1.png" alt="Prism3D" class="nav-logo-img"></a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#pillars">Products</a></li>
+    <li><a href="#cs">Coming Soon</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-body">
+    <h1 class="hero-title">
+      <span class="hero-word"><span class="grad" id="w1">PRISM</span></span>
+      <span class="hero-word"><span id="w2">3D</span></span>
+    </h1>
+    <p class="hero-tagline" id="tagline">— &nbsp;crafted layer by layer &nbsp;—</p>
+    <div class="hero-cta" id="cta">
+      <span class="scan-line"></span>
+      <span>Scroll to explore</span>
+      <span class="scan-line"></span>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="reveal about-lead">
+    <p class="lbl">Who we are</p>
+    <h2 class="stitle">Things worth printing.<br>Designs worth keeping.</h2>
+    <p class="sbody">
+      Prism3D is a 3D printing brand built around objects that actually mean something —
+      playful toys, charming keychains, statement home décor, miniature models, and novelty bobbleheads,
+      all produced right here on our printers, layer by layer.
+    </p>
+    <p class="sbody" style="margin-top:1.2rem;">
+      We curate and craft our own range of designs — pieces made to sit on your shelf,
+      gift to someone, or just make you smile. Every product leaves our studio finished and ready to enjoy.
+      We're just getting started, and there's a lot more coming.
+    </p>
+  </div>
+  <div class="about-cats reveal">
+    <div class="acat"><span>◈</span><strong>Toys &amp; Figurines</strong></div>
+    <div class="acat"><span>⬡</span><strong>Keychains &amp; Accessories</strong></div>
+    <div class="acat"><span>◉</span><strong>Home Décor &amp; More</strong></div>
+  </div>
+</section>
+
+<!-- WHY STRIP -->
+<div id="why-strip">
+  <div class="why-item reveal"><span class="why-icon">⬟</span><strong>Unique Designs</strong><span>Every product in our range is designed to stand out — not mass-produced, not generic.</span></div>
+  <div class="why-item reveal"><span class="why-icon">◈</span><strong>3D Printed</strong><span>Made on our own printers, layer by layer — so quality and detail are always in our hands.</span></div>
+  <div class="why-item reveal"><span class="why-icon">◉</span><strong>Finished &amp; Ready</strong><span>We don't hand you raw plastic. Every piece leaves our studio finished and display-ready.</span></div>
+  <div class="why-item reveal"><span class="why-icon">⬡</span><strong>More Coming Soon</strong><span>Our catalogue is growing — new designs, new categories, and new surprises on the way.</span></div>
+</div>
+
+<!-- PROCESS -->
+<section class="section-wide" id="process">
+  <div class="inner">
+    <div class="reveal" style="max-width:1200px;margin:0 auto;">
+      <p class="lbl">How we work</p>
+      <h2 class="stitle">From your idea<br>to your hands</h2>
+    </div>
+    <div class="p-list">
+      <div class="p-item" data-d="0">
+        <div class="p-num">01</div>
+        <div class="p-info"><h3>Share Your Idea</h3><p>Send us a photo, a character reference, or just describe what you want. The stranger the idea, the more we love it.</p></div>
+        <div class="p-tag">Concept</div>
+      </div>
+      <div class="p-item" data-d="80">
+        <div class="p-num">02</div>
+        <div class="p-info"><h3>We Model It</h3><p>Our team creates or refines a 3D model tailored exactly to your brief — every curve, proportion, and detail dialled in before a single layer prints.</p></div>
+        <div class="p-tag">Design</div>
+      </div>
+      <div class="p-item" data-d="160">
+        <div class="p-num">03</div>
+        <div class="p-info"><h3>We Print It</h3><p>Your design goes to our precision 3D printers — layer by layer, the digital file becomes a real, physical object right before our eyes.</p></div>
+        <div class="p-tag">Print</div>
+      </div>
+      <div class="p-item" data-d="240">
+        <div class="p-num">04</div>
+        <div class="p-info"><h3>Sand, Paint &amp; Finish</h3><p>We sand, prime, paint, and seal every piece to a professional standard. The finish is what separates a good print from a great one.</p></div>
+        <div class="p-tag">Finish</div>
+      </div>
+      <div class="p-item" data-d="320">
+        <div class="p-num">05</div>
+        <div class="p-info"><h3>Packed &amp; Delivered</h3><p>Carefully packaged to survive the journey and shipped straight to your door — ready to display, gift, or collect.</p></div>
+        <div class="p-tag">Deliver</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PILLARS HEADER -->
+<div class="section" style="max-width:1200px;margin:0 auto;padding-bottom:0;">
+  <div class="reveal">
+    <p class="lbl">What we make</p>
+    <h2 class="stitle">Something for everyone</h2>
+    <p class="sbody">Whether it's for you, a gift, or something that makes a room feel alive — we print it all.</p>
+  </div>
+</div>
+
+<!-- PILLARS -->
+<div id="pillars" style="margin-top:48px;">
+  <div class="pillar" data-d="0">
+    <div class="pillar-icon">◈</div>
+    <h3>Toys &amp; Figurines</h3>
+    <p>From playful characters to detailed miniatures — our 3D printed toys and figurines are designed to delight, collect, and display.</p>
+    <div class="pillar-line"></div>
+  </div>
+  <div class="pillar" data-d="120">
+    <div class="pillar-icon">⬡</div>
+    <h3>Keychains &amp; Accessories</h3>
+    <p>Compact, fun, and full of personality. Our keychains and accessories are the kind of small things that make a big impression.</p>
+    <div class="pillar-line"></div>
+  </div>
+  <div class="pillar" data-d="240">
+    <div class="pillar-icon">◉</div>
+    <h3>Home Décor &amp; More</h3>
+    <p>Bobbleheads, desk pieces, display models, and unique décor — 3D printed objects that bring character to any space.</p>
+    <div class="pillar-line"></div>
+  </div>
+</div>
+
+<!-- COMING SOON -->
+<section id="cs" class="reveal">
+  <div class="cs-badge">Launching Soon</div>
+  <h2 class="cs-h">
+    Your next favourite<br>
+    <span class="grad">thing</span><br>
+    is being printed
+  </h2>
+  <p class="cs-sub">
+    Our shop, custom order system, and full product catalogue are printing up right now —
+    and will be ready to order very soon. Get ready.
+  </p>
+  <div class="cs-grid">
+    <div class="cs-stat"><div class="cs-num" data-t="50">0</div><div class="cs-label">Unique Designs</div></div>
+    <div class="cs-stat"><div class="cs-num" data-t="6">0</div><div class="cs-label">Product Categories</div></div>
+    <div class="cs-stat"><div class="cs-num" data-t="100">0</div><div class="cs-label">% Made In-House</div></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-brand">
+    <img src="logo_1.png" alt="Prism3D" style="height:40px;width:auto;display:block;filter:drop-shadow(0 1px 6px rgba(14,165,233,.15));">
+  </div>
+  <div class="f-copy">© 2026 Prism3D. All rights reserved.</div>
+  <div class="f-tag">crafted layer by layer</div>
+</footer>
+
+<script>
+/* ════════════════════════════════════════
+   CURSOR
+════════════════════════════════════════ */
+const dot  = document.getElementById('cur-dot');
+const ring = document.getElementById('cur-ring');
+let mx=0, my=0, rx=0, ry=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; dot.style.left=mx+'px'; dot.style.top=my+'px'; });
+(function loopRing(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(loopRing); })();
+
+/* ════════════════════════════════════════
+   PRELOADER → HERO SEQUENCE
+════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  document.getElementById('nav').classList.add('show');
+  revealHero();
+});
+
+function revealHero() {
+  setTimeout(() => document.getElementById('w1').classList.add('in'), 300);
+  setTimeout(() => document.getElementById('w2').classList.add('in'), 500);
+  setTimeout(() => document.getElementById('tagline').classList.add('in'), 780);
+  setTimeout(() => document.getElementById('cta').classList.add('in'), 1020);
+}
+
+/* ════════════════════════════════════════
+   HERO CANVAS
+════════════════════════════════════════ */
+const hc = document.getElementById('hero-canvas');
+const hx = hc.getContext('2d');
+let W, H, hmx = 0, hmy = 0;
+
+function resize() { W = hc.width = window.innerWidth; H = hc.height = window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+document.getElementById('hero').addEventListener('mousemove', e => { hmx=e.clientX; hmy=e.clientY; });
+
+let pTime = 0;
+let nozzleX_global = 0, nozzleY_global = 0;
+let filamentOffset = 0;
+const nTrail = [];
+
+function glow(col) { hx.shadowBlur=22; hx.shadowColor=col; }
+function noGlow()  { hx.shadowBlur=0; }
+function line(x1,y1,x2,y2,w,col,glowCol) {
+  hx.beginPath(); hx.moveTo(x1,y1); hx.lineTo(x2,y2);
+  hx.strokeStyle=col; hx.lineWidth=w;
+  if(glowCol){ glow(glowCol); }
+  hx.stroke(); noGlow();
+}
+
+function drawPrinter() {
+  const cx = W*.68, cy = H*.52;
+  const sc = Math.min(H*.36, W*.22, 245);
+  const fw = sc*1.1, fh = sc*1.45;
+  const iso = sc * 0.09;
+
+  hx.save();
+
+  /* Spotlight */
+  const spot = hx.createRadialGradient(cx, cy, 0, cx, cy, sc*1.4);
+  spot.addColorStop(0,'rgba(14,165,233,.10)');
+  spot.addColorStop(.5,'rgba(236,72,153,.05)');
+  spot.addColorStop(1,'rgba(255,255,255,0)');
+  hx.fillStyle=spot; hx.fillRect(cx-sc*1.6, cy-sc*1.6, sc*3.2, sc*3.2);
+
+  const vc  = 'rgba(56,189,248,.88)';
+  const vc2 = 'rgba(56,189,248,.30)';
+  const cc  = 'rgba(236,72,153,.9)';
+
+  /* Isometric back edges */
+  hx.globalAlpha = 0.26;
+  hx.strokeStyle = 'rgba(14,165,233,.4)'; hx.lineWidth = 1;
+  [[cx-fw/2,cy-fh/2],[cx+fw/2,cy-fh/2],[cx+fw/2,cy+fh/2]].forEach(([x,y])=>{
+    hx.beginPath(); hx.moveTo(x,y); hx.lineTo(x+iso,y-iso); hx.stroke();
+  });
+  hx.beginPath(); hx.moveTo(cx-fw/2+iso,cy-fh/2-iso); hx.lineTo(cx+fw/2+iso,cy-fh/2-iso); hx.stroke();
+  hx.beginPath(); hx.moveTo(cx+fw/2+iso,cy-fh/2-iso); hx.lineTo(cx+fw/2+iso,cy+fh/2-iso); hx.stroke();
+
+  hx.globalAlpha = 0.64;
+
+  /* Outer frame */
+  line(cx-fw/2,cy-fh/2,cx-fw/2,cy+fh/2, 2, vc,'rgba(56,189,248,.55)');
+  line(cx+fw/2,cy-fh/2,cx+fw/2,cy+fh/2, 2, vc,'rgba(56,189,248,.55)');
+  line(cx-fw/2,cy-fh/2,cx+fw/2,cy-fh/2, 2, vc);
+  line(cx-fw/2,cy+fh/2,cx+fw/2,cy+fh/2, 2, vc);
+
+  /* Corner feet */
+  line(cx-fw/2,cy+fh/2, cx-fw/2-sc*.05,cy+fh/2+sc*.09, 2, vc);
+  line(cx+fw/2,cy+fh/2, cx+fw/2+sc*.05,cy+fh/2+sc*.09, 2, vc);
+  line(cx-fw/2,cy+fh/2, cx-fw/2+sc*.05,cy+fh/2+sc*.09, 1.5, vc2);
+  line(cx+fw/2,cy+fh/2, cx+fw/2-sc*.05,cy+fh/2+sc*.09, 1.5, vc2);
+
+  /* Z rods */
+  line(cx-fw*.36,cy-fh*.42,cx-fw*.36,cy+fh*.44, 1.2,'rgba(56,189,248,.3)');
+  line(cx+fw*.36,cy-fh*.42,cx+fw*.36,cy+fh*.44, 1.2,'rgba(56,189,248,.3)');
+  line(cx-fw*.36,cy-fh*.38,cx+fw*.36,cy-fh*.38, 0.8,'rgba(56,189,248,.2)');
+
+  /* Gantry rail */
+  const ganY = cy - fh*.08;
+  hx.globalAlpha = 0.78;
+  line(cx-fw*.44,ganY,cx+fw*.44,ganY, 3.2,'rgba(56,189,248,.92)','rgba(56,189,248,.65)');
+  hx.globalAlpha = 0.28;
+  line(cx-fw*.44,ganY, cx-fw*.44+iso,ganY-iso, 1.5, vc2);
+  line(cx+fw*.44,ganY, cx+fw*.44+iso,ganY-iso, 1.5, vc2);
+  line(cx-fw*.44+iso,ganY-iso, cx+fw*.44+iso,ganY-iso, 1, vc2);
+
+  /* Heated print bed */
+  const bedY = cy + fh*.31;
+  const pulse = 0.35 + 0.18*Math.sin(pTime*.038);
+  hx.globalAlpha = pulse;
+  const bedGlow = hx.createRadialGradient(cx,bedY+sc*.03,0, cx,bedY+sc*.03,fw*.58);
+  bedGlow.addColorStop(0,'rgba(236,72,153,.32)');
+  bedGlow.addColorStop(.45,'rgba(251,146,60,.14)');
+  bedGlow.addColorStop(1,'rgba(255,255,255,0)');
+  hx.fillStyle=bedGlow; hx.fillRect(cx-fw*.65,bedY-sc*.05,fw*1.3,sc*.28);
+
+  hx.globalAlpha = 0.78;
+  hx.beginPath(); hx.moveTo(cx-fw*.47,bedY); hx.lineTo(cx+fw*.47,bedY);
+  hx.strokeStyle=cc; hx.lineWidth=3.8;
+  glow('rgba(236,72,153,.55)'); hx.stroke(); noGlow();
+
+  hx.globalAlpha = 0.38;
+  line(cx+fw*.47,bedY, cx+fw*.47+iso,bedY-iso, 2,'rgba(236,72,153,.5)');
+  line(cx-fw*.47+iso,bedY-iso, cx+fw*.47+iso,bedY-iso, 1.2,'rgba(236,72,153,.3)');
+
+  hx.globalAlpha = 0.3;
+  hx.setLineDash([2,5]);
+  for(let i=1;i<7;i++){
+    const bx2=cx-fw*.47+(fw*.94/7)*i;
+    line(bx2,bedY,bx2,bedY+sc*.055, .6,'rgba(236,72,153,.22)');
+  }
+  for(let i=1;i<3;i++){
+    const by2=bedY+(sc*.055/3)*i;
+    line(cx-fw*.47,by2,cx+fw*.47,by2, .4,'rgba(236,72,153,.12)');
+  }
+  hx.setLineDash([]);
+
+  /* Printed object — Ganesha idol silhouette */
+  hx.globalAlpha = 0.88;
+  const maxL = 36;
+  const totalL = Math.floor(((Math.sin(pTime*.0022)+1)*.5)*maxL)+1;
+  const progress = totalL/maxL;
+  const lH = (bedY - ganY)*0.80/maxL;  // auto-fit all layers below gantry
+  const maxObjW = fw*.44;     // max half-span (full width = 2×)
+
+  /* Cross-section profile: t=0 (base) → t=1 (top) */
+  function ganeshW(t){
+    if(t<.08)  return .82;
+    if(t<.16)  return .82-(t-.08)/.08*.34;       // legs: narrow
+    if(t<.32)  return .48+(t-.16)/.16*.46;        // belly expanding
+    if(t<.44)  return .94+(t-.32)/.12*.04;        // belly peak
+    if(t<.52)  return .98-(t-.44)/.08*.30;        // upper body
+    if(t<.57)  return .68-(t-.52)/.05*.38;        // neck (narrow dip)
+    if(t<.65)  return .30+(t-.57)/.08*.46;        // head expanding
+    if(t<.75)  return .76+(t-.65)/.10*.22;        // ears (very wide)
+    if(t<.81)  return .98-(t-.75)/.06*.44;        // above ears
+    if(t<.91)  return .54-(t-.81)/.10*.26;        // crown
+    return       .28-(t-.91)/.09*.22;             // crown tip
+  }
+
+  for(let l=0;l<totalL;l++){
+    const t=l/maxL;
+    const lw=maxObjW*ganeshW(t);
+    const hcol=185+t*205;
+    const ly=bedY-(l+1)*lH;
+    hx.beginPath(); hx.moveTo(cx-lw/2,ly); hx.lineTo(cx+lw/2,ly);
+    hx.strokeStyle=`hsla(${hcol%360},88%,55%,.90)`;
+    hx.lineWidth=lH*.82;
+    if(l===totalL-1){ hx.lineWidth=lH*.9; glow(`hsla(${hcol%360},95%,65%,1)`); }
+    hx.stroke(); noGlow();
+  }
+
+  /* Trunk — grows in as the head region is printed */
+  const trunkStart=.58, trunkFull=.78;
+  if(progress>trunkStart){
+    const tp=Math.min(1,(progress-trunkStart)/(trunkFull-trunkStart));
+    const snoutY=bedY-Math.round(trunkStart*maxL)*lH;
+    hx.save(); hx.globalAlpha=.78*tp;
+    hx.strokeStyle=`hsla(210,88%,56%,.90)`; hx.lineWidth=lH*.85; hx.lineCap='round';
+    glow('rgba(56,189,248,.7)');
+    hx.beginPath(); hx.moveTo(cx+maxObjW*.08, snoutY);
+    hx.bezierCurveTo(
+      cx+maxObjW*.30, snoutY+sc*.06*tp,
+      cx+maxObjW*.38*tp, snoutY+sc*.15*tp,
+      cx+maxObjW*.18*tp, snoutY+sc*.24*tp
+    );
+    hx.stroke(); noGlow(); hx.restore();
+  }
+
+  /* Print progress % label */
+  hx.globalAlpha = 0.48;
+  hx.fillStyle='rgba(14,165,233,.85)';
+  hx.font=`${Math.round(sc*.065)}px 'Space Mono',monospace`;
+  hx.textAlign='right';
+  hx.fillText(`${Math.round(progress*100)}%`, cx-fw*.54, bedY-sc*.14);
+  hx.textAlign='left';
+
+  /* Nozzle carriage */
+  hx.globalAlpha = 0.92;
+  const nxPos = Math.sin(pTime*.02);
+  const nx = cx+nxPos*fw*.4;
+  const ny = ganY;
+  nozzleX_global=nx; nozzleY_global=ny+sc*.08;
+
+  nTrail.push({x:nx, y:ny+sc*.076, h:195+(nxPos+1)*82.5});
+  if(nTrail.length>40) nTrail.shift();
+
+  /* Trail glow dots */
+  hx.save();
+  nTrail.forEach((pt,i)=>{
+    const prog=i/nTrail.length;
+    hx.globalAlpha=prog*.52;
+    hx.fillStyle=`hsla(${pt.h},88%,60%,1)`;
+    hx.shadowBlur=7; hx.shadowColor=`hsla(${pt.h},88%,60%,.8)`;
+    const sz=1.2+prog*2.8;
+    hx.beginPath(); hx.arc(pt.x,pt.y,sz,0,Math.PI*2); hx.fill();
+  });
+  hx.restore(); hx.shadowBlur=0;
+
+  hx.globalAlpha=0.9;
+  /* Carriage body */
+  hx.fillStyle='rgba(56,189,248,.78)';
+  glow('rgba(56,189,248,.85)');
+  hx.fillRect(nx-sc*.056,ny-sc*.04,sc*.112,sc*.108); noGlow();
+
+  /* Nozzle tip — pulsing pink */
+  const np=0.88+0.12*Math.sin(pTime*.2);
+  hx.fillStyle=`rgba(236,72,153,${np})`;
+  glow('rgba(236,72,153,.9)');
+  hx.beginPath(); hx.arc(nx,ny+sc*.074,sc*.027,0,Math.PI*2); hx.fill(); noGlow();
+
+  /* Filament drip line */
+  if(totalL>2){
+    hx.globalAlpha=0.46;
+    hx.setLineDash([3,4]);
+    line(nx,ny+sc*.10,nx,bedY-totalL*sc*.022, 1.2,'rgba(236,72,153,.72)');
+    hx.setLineDash([]);
+  }
+
+  /* Filament spool — enhanced */
+  hx.globalAlpha=0.52;
+  const spX=cx+fw*.52+sc*.3, spY=cy-fh*.12, spR=sc*.26;
+
+  hx.strokeStyle='rgba(56,189,248,.72)'; hx.lineWidth=2;
+  glow('rgba(56,189,248,.35)');
+  hx.beginPath(); hx.arc(spX,spY,spR,0,Math.PI*2); hx.stroke(); noGlow();
+
+  [0.75,0.62,0.50].forEach((r,i)=>{
+    hx.strokeStyle=`rgba(14,165,233,${.28-.06*i})`; hx.lineWidth=5-i;
+    hx.beginPath(); hx.arc(spX,spY,spR*r,0,Math.PI*2); hx.stroke();
+  });
+
+  hx.strokeStyle='rgba(56,189,248,.7)'; hx.lineWidth=1.5;
+  hx.beginPath(); hx.arc(spX,spY,spR*.13,0,Math.PI*2); hx.stroke();
+
+  for(let sp=0;sp<6;sp++){
+    const sa=sp*Math.PI/3+pTime*.005;
+    hx.strokeStyle='rgba(56,189,248,.3)'; hx.lineWidth=1;
+    hx.beginPath();
+    hx.moveTo(spX+Math.cos(sa)*spR*.13,spY+Math.sin(sa)*spR*.13);
+    hx.lineTo(spX+Math.cos(sa)*spR*.75,spY+Math.sin(sa)*spR*.75);
+    hx.stroke();
+  }
+
+  /* Animated flowing filament tube */
+  filamentOffset=(filamentOffset+0.45)%13;
+  hx.setLineDash([5,8]); hx.lineDashOffset=-filamentOffset;
+  hx.strokeStyle='rgba(56,189,248,.32)'; hx.lineWidth=1.5;
+  hx.beginPath();
+  hx.moveTo(spX,spY-spR);
+  hx.bezierCurveTo(spX,spY-spR*1.7, cx+fw*.38,cy-fh*.55, cx+fw*.3,cy-fh*.52);
+  hx.bezierCurveTo(cx+fw*.18,cy-fh*.5, cx+fw*.1,ganY-sc*.07, nx+sc*.04,ny+sc*.01);
+  hx.stroke();
+  hx.setLineDash([]); hx.lineDashOffset=0;
+
+  hx.restore();
+}
+
+/* ── 3D model silhouettes (poster-style) ── */
+function drawSil(type, x, y, sc, angle, alpha) {
+  hx.save();
+  hx.translate(x,y); hx.rotate(angle);
+  hx.globalAlpha=alpha;
+
+  function path(pts,closed){
+    hx.beginPath();
+    pts.forEach((p,i)=>i===0?hx.moveTo(p[0]*sc,p[1]*sc):hx.lineTo(p[0]*sc,p[1]*sc));
+    if(closed) hx.closePath(); hx.stroke();
+  }
+  hx.lineWidth=1.4;
+
+  if(type==='bobble'){
+    hx.strokeStyle='rgba(56,189,248,1)'; glow('rgba(56,189,248,.45)');
+    hx.beginPath(); hx.arc(0,-0.30*sc,.26*sc,0,Math.PI*2); hx.stroke(); noGlow();
+    path([[-0.08,-0.05],[-.15,.38],[.15,.38],[.08,-0.05]],true);
+    hx.beginPath(); hx.moveTo(-0.05*sc,-0.05*sc); hx.lineTo(.05*sc,-0.05*sc); hx.stroke();
+    path([[-.18,.42],[.18,.42],[.14,.5],[-.14,.5]],true);
+  }
+  else if(type==='vase'){
+    hx.strokeStyle='rgba(236,72,153,1)'; glow('rgba(236,72,153,.45)');
+    hx.beginPath();
+    hx.moveTo(-0.1*sc,-0.5*sc);
+    hx.bezierCurveTo(-0.3*sc,-0.22*sc,-0.42*sc,.08*sc,-0.24*sc,.44*sc);
+    hx.lineTo(.24*sc,.44*sc);
+    hx.bezierCurveTo(.42*sc,.08*sc,.3*sc,-0.22*sc,.1*sc,-0.5*sc);
+    hx.closePath(); hx.stroke(); noGlow();
+    hx.beginPath(); hx.ellipse(0,-0.5*sc,.12*sc,.035*sc,0,0,Math.PI*2); hx.stroke();
+    hx.beginPath(); hx.ellipse(0,.44*sc,.26*sc,.06*sc,0,0,Math.PI*2); hx.stroke();
+  }
+  else if(type==='star'){
+    hx.strokeStyle='rgba(251,191,36,1)'; glow('rgba(251,191,36,.45)');
+    const pts5=[];
+    for(let i=0;i<10;i++){
+      const a2=(i*Math.PI/5)-Math.PI/2, r=i%2===0?.42:.18;
+      pts5.push([Math.cos(a2)*r,Math.sin(a2)*r]);
+    }
+    path(pts5,true); noGlow();
+    hx.beginPath(); hx.arc(0,-0.58*sc,.1*sc,0,Math.PI*2); hx.stroke();
+    hx.beginPath(); hx.moveTo(-.04*sc,-0.48*sc); hx.lineTo(.04*sc,-0.48*sc); hx.stroke();
+  }
+  else if(type==='trophy'){
+    hx.strokeStyle='rgba(251,191,36,1)'; glow('rgba(251,191,36,.45)');
+    path([[-.28,-.48],[-.32,.0],[.32,0],[.28,-.48]],true);
+    hx.beginPath(); hx.arc(-0.34*sc,-0.22*sc,.12*sc,Math.PI*.45,Math.PI*1.55); hx.stroke();
+    hx.beginPath(); hx.arc(.34*sc,-0.22*sc,.12*sc,-Math.PI*.55,Math.PI*.55); hx.stroke();
+    path([[-.13,.0],[-.2,.2],[-.3,.2],[-.3,.34],[.3,.34],[.3,.2],[.2,.2],[.13,.0]],false); noGlow();
+  }
+  else if(type==='figure'){
+    hx.strokeStyle='rgba(244,114,182,1)'; glow('rgba(244,114,182,.45)');
+    hx.beginPath(); hx.arc(0,-0.36*sc,.18*sc,0,Math.PI*2); hx.stroke(); noGlow();
+    path([[-.05,-.19],[-.2,.12],[-.1,.48],[.1,.48],[.2,.12],[.05,-.19]],true);
+    path([[-.2,.12],[-.3,.38]],false);
+    path([[.2,.12],[.3,.38]],false);
+  }
+
+  noGlow(); hx.restore();
+}
+
+/* Poster frames */
+function drawPosterFrame(x,y,w,h,col,alpha){
+  hx.save(); hx.globalAlpha=alpha*.75;
+  hx.strokeStyle=col; hx.lineWidth=.8;
+  hx.strokeRect(x-w/2,y-h/2,w,h);
+  const c=w*.14; hx.lineWidth=1.2;
+  [[x-w/2,y-h/2,c,0],[x+w/2,y-h/2,-c,0],[x-w/2,y+h/2,c,0],[x+w/2,y+h/2,-c,0]].forEach(([px2,py2,dx2])=>{
+    hx.beginPath(); hx.moveTo(px2,py2+c); hx.lineTo(px2,py2); hx.lineTo(px2+dx2,py2); hx.stroke();
+  });
+  hx.restore();
+}
+
+const sils=[
+  {type:'bobble',rx:.10,ry:.28,s:92,a:0,   sp: .0005,col:'rgba(56,189,248,.5)', fw:120,fh:155},
+  {type:'vase',  rx:.88,ry:.30,s:86,a:.2,  sp:-.0004,col:'rgba(236,72,153,.5)', fw:100,fh:150},
+  {type:'star',  rx:.08,ry:.72,s:78,a:-.4, sp: .0007,col:'rgba(251,191,36,.5)', fw:100,fh:100},
+  {type:'trophy',rx:.88,ry:.70,s:84,a:.15, sp:-.0005,col:'rgba(251,191,36,.5)', fw:105,fh:140},
+  {type:'figure',rx:.50,ry:.09,s:76,a:0,   sp: .0006,col:'rgba(244,114,182,.5)',fw:95, fh:145},
+];
+const flo=sils.map((_,i)=>i*1.3);
+
+/* Floating background layer lines */
+const bgLines=Array.from({length:16},()=>({
+  y:Math.random()*window.innerHeight,
+  x:Math.random()*window.innerWidth,
+  w:50+Math.random()*130,
+  spd:0.12+Math.random()*0.18,
+  alpha:0.04+Math.random()*0.055,
+  hue:190+Math.random()*170
+}));
+
+/* Heat particles */
+const hp=Array.from({length:32},()=>({x:0,y:0,vx:0,vy:0,life:0,max:0,h:0,dead:true}));
+let hpTick=0;
+function spawnHP(){
+  const p=hp.find(p=>p.dead)||hp[0];
+  p.x=nozzleX_global+(Math.random()-.5)*5;
+  p.y=nozzleY_global;
+  p.vx=(Math.random()-.5)*.6; p.vy=-(Math.random()*1.4+.4);
+  p.h=195+Math.random()*160; p.life=0; p.max=Math.random()*50+22; p.dead=false;
+}
+
+function heroLoop(){
+  hx.clearRect(0,0,W,H);
+  pTime++;
+
+  /* Background gradient */
+  const bg=hx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#dff0ff');
+  bg.addColorStop(.38,'#f4f9ff');
+  bg.addColorStop(.72,'#fff2f9');
+  bg.addColorStop(1,'#fde4f2');
+  hx.fillStyle=bg; hx.fillRect(0,0,W,H);
+
+  /* Vignette */
+  const vig=hx.createRadialGradient(W*.5,H*.5,H*.3,W*.5,H*.5,H*.85);
+  vig.addColorStop(0,'rgba(255,255,255,0)'); vig.addColorStop(1,'rgba(200,230,255,.18)');
+  hx.fillStyle=vig; hx.fillRect(0,0,W,H);
+
+  /* Mouse shimmer */
+  const mg=hx.createRadialGradient(hmx,hmy,0,hmx,hmy,220);
+  mg.addColorStop(0,'rgba(14,165,233,.07)'); mg.addColorStop(1,'rgba(255,255,255,0)');
+  hx.fillStyle=mg; hx.fillRect(0,0,W,H);
+
+  /* Floating layer lines */
+  bgLines.forEach(bl=>{
+    bl.y-=bl.spd;
+    if(bl.y<-4){bl.y=H+4; bl.x=Math.random()*W; bl.w=50+Math.random()*130;}
+    hx.save(); hx.globalAlpha=bl.alpha;
+    hx.strokeStyle=`hsla(${bl.hue},75%,55%,1)`;
+    hx.lineWidth=1;
+    hx.beginPath(); hx.moveTo(bl.x-bl.w/2,bl.y); hx.lineTo(bl.x+bl.w/2,bl.y); hx.stroke();
+    hx.restore();
+  });
+
+  /* Silhouettes */
+  const now=Date.now();
+  sils.forEach((s,i)=>{
+    const fy=Math.sin(now*.00045+flo[i])*9;
+    s.a+=s.sp;
+    const sx=s.rx*W, sy=s.ry*H+fy;
+    drawPosterFrame(sx,sy,s.fw,s.fh,s.col,.3);
+    drawSil(s.type,sx,sy,s.s,s.a,.24);
+  });
+
+  /* Printer */
+  drawPrinter();
+
+  /* Heat particles */
+  if(++hpTick%3===0) spawnHP();
+  hp.forEach(p=>{
+    if(p.dead) return;
+    p.x+=p.vx; p.y+=p.vy; p.life++;
+    if(p.life>=p.max){p.dead=true;return;}
+    const a=.72*(1-p.life/p.max);
+    hx.save(); hx.globalAlpha=a;
+    hx.fillStyle=`hsl(${p.h},90%,50%)`;
+    hx.shadowBlur=9; hx.shadowColor=`hsl(${p.h},90%,55%)`;
+    hx.beginPath(); hx.arc(p.x,p.y,1.6,0,Math.PI*2); hx.fill();
+    hx.restore();
+  });
+
+  requestAnimationFrame(heroLoop);
+}
+heroLoop();
+
+/* ════════════════════════════════════════
+   SCROLL OBSERVERS
+════════════════════════════════════════ */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('in'); });
+}, {threshold:.12, rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+const pObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) setTimeout(()=>e.target.classList.add('in'), parseInt(e.target.dataset.d)||0);
+  });
+}, {threshold:.1});
+document.querySelectorAll('.p-item, .pillar').forEach(el=>pObs.observe(el));
+
+/* counter */
+const cObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting && !e.target._done) {
+      e.target._done=true;
+      const tgt=parseInt(e.target.dataset.t);
+      let n=0; const step=tgt/55;
+      const t=setInterval(()=>{
+        n+=step; if(n>=tgt){n=tgt;clearInterval(t);}
+        e.target.textContent = Math.floor(n) + (tgt===1?'':'+');
+      },28);
+    }
+  });
+},{threshold:.5});
+document.querySelectorAll('.cs-num').forEach(el=>cObs.observe(el));
+
+/* parallax hero */
+window.addEventListener('scroll', () => {
+  const s=window.scrollY;
+  if(s<window.innerHeight){
+    const hb=document.querySelector('.hero-body');
+    hb.style.transform=`translateY(${s*.28}px)`;
+    hb.style.opacity=1-s/(window.innerHeight*.75);
+  }
+  const nav=document.getElementById('nav');
+  nav.classList.toggle('scrolled', window.scrollY>60);
+});
+</script>
+</body>
+</html>
