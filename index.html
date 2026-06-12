@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prism3D — Crafted Layer by Layer</title>
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@2.0.8/dist/lottie-player.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
@@ -83,6 +84,13 @@
       overflow: hidden;
     }
     #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    .hero-lottie {
+      position: absolute; right: 5%; top: 50%; transform: translateY(-50%);
+      width: min(42vw, 520px); pointer-events: none; z-index: 1;
+      filter: drop-shadow(0 8px 40px rgba(14,165,233,.18));
+    }
+    .hero-lottie lottie-player { width: 100%; height: auto; }
 
     .hero-body {
       position: relative; z-index: 10;
@@ -358,6 +366,9 @@
 <!-- HERO -->
 <section id="hero">
   <canvas id="hero-canvas"></canvas>
+  <div class="hero-lottie">
+    <lottie-player src="printer.json" background="transparent" speed="1" loop autoplay></lottie-player>
+  </div>
   <div class="hero-body">
     <h1 class="hero-title">
       <span class="hero-word"><span class="grad" id="w1">PRISM</span></span>
@@ -455,9 +466,6 @@ resize(); window.addEventListener('resize', resize);
 document.getElementById('hero').addEventListener('mousemove', e => { hmx=e.clientX; hmy=e.clientY; });
 
 let pTime = 0;
-let nozzleX_global = 0, nozzleY_global = 0;
-let filamentOffset = 0;
-const nTrail = [];
 
 function glow(col) { hx.shadowBlur=22; hx.shadowColor=col; }
 function noGlow()  { hx.shadowBlur=0; }
@@ -466,234 +474,6 @@ function line(x1,y1,x2,y2,w,col,glowCol) {
   hx.strokeStyle=col; hx.lineWidth=w;
   if(glowCol){ glow(glowCol); }
   hx.stroke(); noGlow();
-}
-
-function drawPrinter() {
-  const cx = W*.68, cy = H*.52;
-  const sc = Math.min(H*.36, W*.22, 245);
-  const fw = sc*1.1, fh = sc*1.45;
-  const iso = sc * 0.09;
-
-  hx.save();
-
-  /* Spotlight */
-  const spot = hx.createRadialGradient(cx, cy, 0, cx, cy, sc*1.4);
-  spot.addColorStop(0,'rgba(14,165,233,.10)');
-  spot.addColorStop(.5,'rgba(236,72,153,.05)');
-  spot.addColorStop(1,'rgba(255,255,255,0)');
-  hx.fillStyle=spot; hx.fillRect(cx-sc*1.6, cy-sc*1.6, sc*3.2, sc*3.2);
-
-  const vc  = 'rgba(56,189,248,.88)';
-  const vc2 = 'rgba(56,189,248,.30)';
-  const cc  = 'rgba(236,72,153,.9)';
-
-  /* Isometric back edges */
-  hx.globalAlpha = 0.26;
-  hx.strokeStyle = 'rgba(14,165,233,.4)'; hx.lineWidth = 1;
-  [[cx-fw/2,cy-fh/2],[cx+fw/2,cy-fh/2],[cx+fw/2,cy+fh/2]].forEach(([x,y])=>{
-    hx.beginPath(); hx.moveTo(x,y); hx.lineTo(x+iso,y-iso); hx.stroke();
-  });
-  hx.beginPath(); hx.moveTo(cx-fw/2+iso,cy-fh/2-iso); hx.lineTo(cx+fw/2+iso,cy-fh/2-iso); hx.stroke();
-  hx.beginPath(); hx.moveTo(cx+fw/2+iso,cy-fh/2-iso); hx.lineTo(cx+fw/2+iso,cy+fh/2-iso); hx.stroke();
-
-  hx.globalAlpha = 0.64;
-
-  /* Outer frame */
-  line(cx-fw/2,cy-fh/2,cx-fw/2,cy+fh/2, 2, vc,'rgba(56,189,248,.55)');
-  line(cx+fw/2,cy-fh/2,cx+fw/2,cy+fh/2, 2, vc,'rgba(56,189,248,.55)');
-  line(cx-fw/2,cy-fh/2,cx+fw/2,cy-fh/2, 2, vc);
-  line(cx-fw/2,cy+fh/2,cx+fw/2,cy+fh/2, 2, vc);
-
-  /* Corner feet */
-  line(cx-fw/2,cy+fh/2, cx-fw/2-sc*.05,cy+fh/2+sc*.09, 2, vc);
-  line(cx+fw/2,cy+fh/2, cx+fw/2+sc*.05,cy+fh/2+sc*.09, 2, vc);
-  line(cx-fw/2,cy+fh/2, cx-fw/2+sc*.05,cy+fh/2+sc*.09, 1.5, vc2);
-  line(cx+fw/2,cy+fh/2, cx+fw/2-sc*.05,cy+fh/2+sc*.09, 1.5, vc2);
-
-  /* Z rods */
-  line(cx-fw*.36,cy-fh*.42,cx-fw*.36,cy+fh*.44, 1.2,'rgba(56,189,248,.3)');
-  line(cx+fw*.36,cy-fh*.42,cx+fw*.36,cy+fh*.44, 1.2,'rgba(56,189,248,.3)');
-  line(cx-fw*.36,cy-fh*.38,cx+fw*.36,cy-fh*.38, 0.8,'rgba(56,189,248,.2)');
-
-  /* Gantry rail */
-  const ganY = cy - fh*.08;
-  hx.globalAlpha = 0.78;
-  line(cx-fw*.44,ganY,cx+fw*.44,ganY, 3.2,'rgba(56,189,248,.92)','rgba(56,189,248,.65)');
-  hx.globalAlpha = 0.28;
-  line(cx-fw*.44,ganY, cx-fw*.44+iso,ganY-iso, 1.5, vc2);
-  line(cx+fw*.44,ganY, cx+fw*.44+iso,ganY-iso, 1.5, vc2);
-  line(cx-fw*.44+iso,ganY-iso, cx+fw*.44+iso,ganY-iso, 1, vc2);
-
-  /* Heated print bed */
-  const bedY = cy + fh*.31;
-  const pulse = 0.35 + 0.18*Math.sin(pTime*.038);
-  hx.globalAlpha = pulse;
-  const bedGlow = hx.createRadialGradient(cx,bedY+sc*.03,0, cx,bedY+sc*.03,fw*.58);
-  bedGlow.addColorStop(0,'rgba(236,72,153,.32)');
-  bedGlow.addColorStop(.45,'rgba(251,146,60,.14)');
-  bedGlow.addColorStop(1,'rgba(255,255,255,0)');
-  hx.fillStyle=bedGlow; hx.fillRect(cx-fw*.65,bedY-sc*.05,fw*1.3,sc*.28);
-
-  hx.globalAlpha = 0.78;
-  hx.beginPath(); hx.moveTo(cx-fw*.47,bedY); hx.lineTo(cx+fw*.47,bedY);
-  hx.strokeStyle=cc; hx.lineWidth=3.8;
-  glow('rgba(236,72,153,.55)'); hx.stroke(); noGlow();
-
-  hx.globalAlpha = 0.38;
-  line(cx+fw*.47,bedY, cx+fw*.47+iso,bedY-iso, 2,'rgba(236,72,153,.5)');
-  line(cx-fw*.47+iso,bedY-iso, cx+fw*.47+iso,bedY-iso, 1.2,'rgba(236,72,153,.3)');
-
-  hx.globalAlpha = 0.3;
-  hx.setLineDash([2,5]);
-  for(let i=1;i<7;i++){
-    const bx2=cx-fw*.47+(fw*.94/7)*i;
-    line(bx2,bedY,bx2,bedY+sc*.055, .6,'rgba(236,72,153,.22)');
-  }
-  for(let i=1;i<3;i++){
-    const by2=bedY+(sc*.055/3)*i;
-    line(cx-fw*.47,by2,cx+fw*.47,by2, .4,'rgba(236,72,153,.12)');
-  }
-  hx.setLineDash([]);
-
-  /* Printed object — Ganesha idol silhouette */
-  hx.globalAlpha = 0.88;
-  const maxL = 36;
-  const totalL = Math.floor(((Math.sin(pTime*.0022)+1)*.5)*maxL)+1;
-  const progress = totalL/maxL;
-  const lH = (bedY - ganY)*0.80/maxL;  // auto-fit all layers below gantry
-  const maxObjW = fw*.44;     // max half-span (full width = 2×)
-
-  /* Cross-section profile: t=0 (base) → t=1 (top) */
-  function ganeshW(t){
-    if(t<.08)  return .82;
-    if(t<.16)  return .82-(t-.08)/.08*.34;       // legs: narrow
-    if(t<.32)  return .48+(t-.16)/.16*.46;        // belly expanding
-    if(t<.44)  return .94+(t-.32)/.12*.04;        // belly peak
-    if(t<.52)  return .98-(t-.44)/.08*.30;        // upper body
-    if(t<.57)  return .68-(t-.52)/.05*.38;        // neck (narrow dip)
-    if(t<.65)  return .30+(t-.57)/.08*.46;        // head expanding
-    if(t<.75)  return .76+(t-.65)/.10*.22;        // ears (very wide)
-    if(t<.81)  return .98-(t-.75)/.06*.44;        // above ears
-    if(t<.91)  return .54-(t-.81)/.10*.26;        // crown
-    return       .28-(t-.91)/.09*.22;             // crown tip
-  }
-
-  for(let l=0;l<totalL;l++){
-    const t=l/maxL;
-    const lw=maxObjW*ganeshW(t);
-    const hcol=185+t*205;
-    const ly=bedY-(l+1)*lH;
-    hx.beginPath(); hx.moveTo(cx-lw/2,ly); hx.lineTo(cx+lw/2,ly);
-    hx.strokeStyle=`hsla(${hcol%360},88%,55%,.90)`;
-    hx.lineWidth=lH*.82;
-    if(l===totalL-1){ hx.lineWidth=lH*.9; glow(`hsla(${hcol%360},95%,65%,1)`); }
-    hx.stroke(); noGlow();
-  }
-
-  /* Trunk — grows in as the head region is printed */
-  const trunkStart=.58, trunkFull=.78;
-  if(progress>trunkStart){
-    const tp=Math.min(1,(progress-trunkStart)/(trunkFull-trunkStart));
-    const snoutY=bedY-Math.round(trunkStart*maxL)*lH;
-    hx.save(); hx.globalAlpha=.78*tp;
-    hx.strokeStyle=`hsla(210,88%,56%,.90)`; hx.lineWidth=lH*.85; hx.lineCap='round';
-    glow('rgba(56,189,248,.7)');
-    hx.beginPath(); hx.moveTo(cx+maxObjW*.08, snoutY);
-    hx.bezierCurveTo(
-      cx+maxObjW*.30, snoutY+sc*.06*tp,
-      cx+maxObjW*.38*tp, snoutY+sc*.15*tp,
-      cx+maxObjW*.18*tp, snoutY+sc*.24*tp
-    );
-    hx.stroke(); noGlow(); hx.restore();
-  }
-
-  /* Print progress % label */
-  hx.globalAlpha = 0.48;
-  hx.fillStyle='rgba(14,165,233,.85)';
-  hx.font=`${Math.round(sc*.065)}px 'Space Mono',monospace`;
-  hx.textAlign='right';
-  hx.fillText(`${Math.round(progress*100)}%`, cx-fw*.54, bedY-sc*.14);
-  hx.textAlign='left';
-
-  /* Nozzle carriage */
-  hx.globalAlpha = 0.92;
-  const nxPos = Math.sin(pTime*.02);
-  const nx = cx+nxPos*fw*.4;
-  const ny = ganY;
-  nozzleX_global=nx; nozzleY_global=ny+sc*.08;
-
-  nTrail.push({x:nx, y:ny+sc*.076, h:195+(nxPos+1)*82.5});
-  if(nTrail.length>40) nTrail.shift();
-
-  /* Trail glow dots */
-  hx.save();
-  nTrail.forEach((pt,i)=>{
-    const prog=i/nTrail.length;
-    hx.globalAlpha=prog*.52;
-    hx.fillStyle=`hsla(${pt.h},88%,60%,1)`;
-    hx.shadowBlur=7; hx.shadowColor=`hsla(${pt.h},88%,60%,.8)`;
-    const sz=1.2+prog*2.8;
-    hx.beginPath(); hx.arc(pt.x,pt.y,sz,0,Math.PI*2); hx.fill();
-  });
-  hx.restore(); hx.shadowBlur=0;
-
-  hx.globalAlpha=0.9;
-  /* Carriage body */
-  hx.fillStyle='rgba(56,189,248,.78)';
-  glow('rgba(56,189,248,.85)');
-  hx.fillRect(nx-sc*.056,ny-sc*.04,sc*.112,sc*.108); noGlow();
-
-  /* Nozzle tip — pulsing pink */
-  const np=0.88+0.12*Math.sin(pTime*.2);
-  hx.fillStyle=`rgba(236,72,153,${np})`;
-  glow('rgba(236,72,153,.9)');
-  hx.beginPath(); hx.arc(nx,ny+sc*.074,sc*.027,0,Math.PI*2); hx.fill(); noGlow();
-
-  /* Filament drip line */
-  if(totalL>2){
-    hx.globalAlpha=0.46;
-    hx.setLineDash([3,4]);
-    line(nx,ny+sc*.10,nx,bedY-totalL*sc*.022, 1.2,'rgba(236,72,153,.72)');
-    hx.setLineDash([]);
-  }
-
-  /* Filament spool — enhanced */
-  hx.globalAlpha=0.52;
-  const spX=cx+fw*.52+sc*.3, spY=cy-fh*.12, spR=sc*.26;
-
-  hx.strokeStyle='rgba(56,189,248,.72)'; hx.lineWidth=2;
-  glow('rgba(56,189,248,.35)');
-  hx.beginPath(); hx.arc(spX,spY,spR,0,Math.PI*2); hx.stroke(); noGlow();
-
-  [0.75,0.62,0.50].forEach((r,i)=>{
-    hx.strokeStyle=`rgba(14,165,233,${.28-.06*i})`; hx.lineWidth=5-i;
-    hx.beginPath(); hx.arc(spX,spY,spR*r,0,Math.PI*2); hx.stroke();
-  });
-
-  hx.strokeStyle='rgba(56,189,248,.7)'; hx.lineWidth=1.5;
-  hx.beginPath(); hx.arc(spX,spY,spR*.13,0,Math.PI*2); hx.stroke();
-
-  for(let sp=0;sp<6;sp++){
-    const sa=sp*Math.PI/3+pTime*.005;
-    hx.strokeStyle='rgba(56,189,248,.3)'; hx.lineWidth=1;
-    hx.beginPath();
-    hx.moveTo(spX+Math.cos(sa)*spR*.13,spY+Math.sin(sa)*spR*.13);
-    hx.lineTo(spX+Math.cos(sa)*spR*.75,spY+Math.sin(sa)*spR*.75);
-    hx.stroke();
-  }
-
-  /* Animated flowing filament tube */
-  filamentOffset=(filamentOffset+0.45)%13;
-  hx.setLineDash([5,8]); hx.lineDashOffset=-filamentOffset;
-  hx.strokeStyle='rgba(56,189,248,.32)'; hx.lineWidth=1.5;
-  hx.beginPath();
-  hx.moveTo(spX,spY-spR);
-  hx.bezierCurveTo(spX,spY-spR*1.7, cx+fw*.38,cy-fh*.55, cx+fw*.3,cy-fh*.52);
-  hx.bezierCurveTo(cx+fw*.18,cy-fh*.5, cx+fw*.1,ganY-sc*.07, nx+sc*.04,ny+sc*.01);
-  hx.stroke();
-  hx.setLineDash([]); hx.lineDashOffset=0;
-
-  hx.restore();
 }
 
 /* ── 3D model silhouettes (poster-style) ── */
@@ -787,17 +567,6 @@ const bgLines=Array.from({length:16},()=>({
   hue:190+Math.random()*170
 }));
 
-/* Heat particles */
-const hp=Array.from({length:32},()=>({x:0,y:0,vx:0,vy:0,life:0,max:0,h:0,dead:true}));
-let hpTick=0;
-function spawnHP(){
-  const p=hp.find(p=>p.dead)||hp[0];
-  p.x=nozzleX_global+(Math.random()-.5)*5;
-  p.y=nozzleY_global;
-  p.vx=(Math.random()-.5)*.6; p.vy=-(Math.random()*1.4+.4);
-  p.h=195+Math.random()*160; p.life=0; p.max=Math.random()*50+22; p.dead=false;
-}
-
 function heroLoop(){
   hx.clearRect(0,0,W,H);
   pTime++;
@@ -839,23 +608,6 @@ function heroLoop(){
     const sx=s.rx*W, sy=s.ry*H+fy;
     drawPosterFrame(sx,sy,s.fw,s.fh,s.col,.3);
     drawSil(s.type,sx,sy,s.s,s.a,.24);
-  });
-
-  /* Printer */
-  drawPrinter();
-
-  /* Heat particles */
-  if(++hpTick%3===0) spawnHP();
-  hp.forEach(p=>{
-    if(p.dead) return;
-    p.x+=p.vx; p.y+=p.vy; p.life++;
-    if(p.life>=p.max){p.dead=true;return;}
-    const a=.72*(1-p.life/p.max);
-    hx.save(); hx.globalAlpha=a;
-    hx.fillStyle=`hsl(${p.h},90%,50%)`;
-    hx.shadowBlur=9; hx.shadowColor=`hsl(${p.h},90%,55%)`;
-    hx.beginPath(); hx.arc(p.x,p.y,1.6,0,Math.PI*2); hx.fill();
-    hx.restore();
   });
 
   requestAnimationFrame(heroLoop);
