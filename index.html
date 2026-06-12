@@ -35,7 +35,6 @@
       color: var(--text);
       font-family: var(--ff-body);
       overflow-x: hidden;
-      cursor: none;
     }
 
     /* ──────────────────── NOISE OVERLAY ──────────────────── */
@@ -48,29 +47,6 @@
       pointer-events: none;
       z-index: 9997;
     }
-
-    /* ──────────────────── CURSOR ──────────────────── */
-    #cur-dot {
-      position: fixed; width: 8px; height: 8px;
-      background: var(--purple); border-radius: 50%;
-      pointer-events: none; z-index: 9999;
-      transform: translate(-50%,-50%);
-      mix-blend-mode: multiply;
-      transition: width .15s, height .15s, background .2s;
-    }
-    #cur-ring {
-      position: fixed; width: 36px; height: 36px;
-      border: 1px solid rgba(14,165,233,.5); border-radius: 50%;
-      pointer-events: none; z-index: 9998;
-      transform: translate(-50%,-50%);
-      mix-blend-mode: multiply;
-      transition: width .2s, height .2s, border-color .2s;
-    }
-    body:has(a:hover) #cur-dot,
-    body:has(button:hover) #cur-dot { width: 16px; height: 16px; background: var(--cyan); }
-    body:has(a:hover) #cur-ring,
-    body:has(button:hover) #cur-ring { width: 56px; height: 56px; border-color: rgba(236,72,153,.5); }
-
 
     /* ──────────────────── NAV ──────────────────── */
     #nav {
@@ -316,6 +292,27 @@
     .why-item strong { font-size: 1rem; font-weight: 600; }
     .why-item span { font-size: .88rem; color: var(--muted); line-height: 1.6; }
 
+    /* ──────────────────── SOCIAL BUTTONS ──────────────────── */
+    .soc-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 32px; border-radius: 50px;
+      font-family: var(--ff-body); font-size: 1rem; font-weight: 600;
+      text-decoration: none; letter-spacing: .01em;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .soc-btn:hover { transform: translateY(-3px); }
+    .soc-wa {
+      background: #25d366; color: #fff;
+      box-shadow: 0 4px 24px rgba(37,211,102,.30);
+    }
+    .soc-wa:hover { box-shadow: 0 8px 32px rgba(37,211,102,.45); }
+    .soc-ig {
+      background: linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(221,42,123,.28);
+    }
+    .soc-ig:hover { box-shadow: 0 8px 32px rgba(221,42,123,.42); }
+
     /* ──────────────────── FOOTER ──────────────────── */
     footer {
       border-top: 1px solid var(--border);
@@ -350,19 +347,11 @@
 </head>
 <body>
 
-<!-- CURSOR -->
-<div id="cur-dot"></div>
-<div id="cur-ring"></div>
-
-
 <!-- NAV -->
 <nav id="nav">
   <a class="nav-brand" href="#"><img src="logo_1.png" alt="Prism3D" class="nav-logo-img"></a>
   <ul class="nav-links">
     <li><a href="#about">About</a></li>
-    <li><a href="#process">Process</a></li>
-    <li><a href="#pillars">Products</a></li>
-    <li><a href="#cs">Coming Soon</a></li>
   </ul>
 </nav>
 
@@ -406,98 +395,22 @@
   </div>
 </section>
 
-<!-- WHY STRIP -->
-<div id="why-strip">
-  <div class="why-item reveal"><span class="why-icon">⬟</span><strong>Unique Designs</strong><span>Every product in our range is designed to stand out — not mass-produced, not generic.</span></div>
-  <div class="why-item reveal"><span class="why-icon">◈</span><strong>3D Printed</strong><span>Made on our own printers, layer by layer — so quality and detail are always in our hands.</span></div>
-  <div class="why-item reveal"><span class="why-icon">◉</span><strong>Finished &amp; Ready</strong><span>We don't hand you raw plastic. Every piece leaves our studio finished and display-ready.</span></div>
-  <div class="why-item reveal"><span class="why-icon">⬡</span><strong>More Coming Soon</strong><span>Our catalogue is growing — new designs, new categories, and new surprises on the way.</span></div>
-</div>
-
-<!-- PROCESS -->
-<section class="section-wide" id="process">
-  <div class="inner">
-    <div class="reveal" style="max-width:1200px;margin:0 auto;">
-      <p class="lbl">How we work</p>
-      <h2 class="stitle">From your idea<br>to your hands</h2>
+<!-- SOCIAL CTA -->
+<section id="connect" class="section reveal">
+  <div style="max-width:680px;margin:0 auto;text-align:center;">
+    <p class="lbl">Find us on</p>
+    <h2 class="stitle" style="margin-bottom:1.2rem;">Browse our catalogue.<br>Follow our journey.</h2>
+    <p class="sbody" style="margin-bottom:3rem;">Our WhatsApp catalogue is live — browse what we make and place an enquiry directly. Follow us on Instagram for new drops, behind-the-scenes prints, and updates.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://wa.me/c/61938394480729" target="_blank" rel="noopener" class="soc-btn soc-wa">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp Catalogue
+      </a>
+      <a href="https://www.instagram.com/prism3d.in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener" class="soc-btn soc-ig">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        Follow on Instagram
+      </a>
     </div>
-    <div class="p-list">
-      <div class="p-item" data-d="0">
-        <div class="p-num">01</div>
-        <div class="p-info"><h3>Share Your Idea</h3><p>Send us a photo, a character reference, or just describe what you want. The stranger the idea, the more we love it.</p></div>
-        <div class="p-tag">Concept</div>
-      </div>
-      <div class="p-item" data-d="80">
-        <div class="p-num">02</div>
-        <div class="p-info"><h3>We Model It</h3><p>Our team creates or refines a 3D model tailored exactly to your brief — every curve, proportion, and detail dialled in before a single layer prints.</p></div>
-        <div class="p-tag">Design</div>
-      </div>
-      <div class="p-item" data-d="160">
-        <div class="p-num">03</div>
-        <div class="p-info"><h3>We Print It</h3><p>Your design goes to our precision 3D printers — layer by layer, the digital file becomes a real, physical object right before our eyes.</p></div>
-        <div class="p-tag">Print</div>
-      </div>
-      <div class="p-item" data-d="240">
-        <div class="p-num">04</div>
-        <div class="p-info"><h3>Sand, Paint &amp; Finish</h3><p>We sand, prime, paint, and seal every piece to a professional standard. The finish is what separates a good print from a great one.</p></div>
-        <div class="p-tag">Finish</div>
-      </div>
-      <div class="p-item" data-d="320">
-        <div class="p-num">05</div>
-        <div class="p-info"><h3>Packed &amp; Delivered</h3><p>Carefully packaged to survive the journey and shipped straight to your door — ready to display, gift, or collect.</p></div>
-        <div class="p-tag">Deliver</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- PILLARS HEADER -->
-<div class="section" style="max-width:1200px;margin:0 auto;padding-bottom:0;">
-  <div class="reveal">
-    <p class="lbl">What we make</p>
-    <h2 class="stitle">Something for everyone</h2>
-    <p class="sbody">Whether it's for you, a gift, or something that makes a room feel alive — we print it all.</p>
-  </div>
-</div>
-
-<!-- PILLARS -->
-<div id="pillars" style="margin-top:48px;">
-  <div class="pillar" data-d="0">
-    <div class="pillar-icon">◈</div>
-    <h3>Toys &amp; Figurines</h3>
-    <p>From playful characters to detailed miniatures — our 3D printed toys and figurines are designed to delight, collect, and display.</p>
-    <div class="pillar-line"></div>
-  </div>
-  <div class="pillar" data-d="120">
-    <div class="pillar-icon">⬡</div>
-    <h3>Keychains &amp; Accessories</h3>
-    <p>Compact, fun, and full of personality. Our keychains and accessories are the kind of small things that make a big impression.</p>
-    <div class="pillar-line"></div>
-  </div>
-  <div class="pillar" data-d="240">
-    <div class="pillar-icon">◉</div>
-    <h3>Home Décor &amp; More</h3>
-    <p>Bobbleheads, desk pieces, display models, and unique décor — 3D printed objects that bring character to any space.</p>
-    <div class="pillar-line"></div>
-  </div>
-</div>
-
-<!-- COMING SOON -->
-<section id="cs" class="reveal">
-  <div class="cs-badge">Launching Soon</div>
-  <h2 class="cs-h">
-    Your next favourite<br>
-    <span class="grad">thing</span><br>
-    is being printed
-  </h2>
-  <p class="cs-sub">
-    Our shop, custom order system, and full product catalogue are printing up right now —
-    and will be ready to order very soon. Get ready.
-  </p>
-  <div class="cs-grid">
-    <div class="cs-stat"><div class="cs-num" data-t="50">0</div><div class="cs-label">Unique Designs</div></div>
-    <div class="cs-stat"><div class="cs-num" data-t="6">0</div><div class="cs-label">Product Categories</div></div>
-    <div class="cs-stat"><div class="cs-num" data-t="100">0</div><div class="cs-label">% Made In-House</div></div>
   </div>
 </section>
 
@@ -506,7 +419,7 @@
   <div class="f-brand">
     <img src="logo_1.png" alt="Prism3D" style="height:40px;width:auto;display:block;filter:drop-shadow(0 1px 6px rgba(14,165,233,.15));">
   </div>
-  <div class="f-copy">© 2026 Prism3D. All rights reserved.</div>
+  <div class="f-copy">© 2025 Prism3D. All rights reserved.</div>
   <div class="f-tag">crafted layer by layer</div>
 </footer>
 
@@ -514,11 +427,6 @@
 /* ════════════════════════════════════════
    CURSOR
 ════════════════════════════════════════ */
-const dot  = document.getElementById('cur-dot');
-const ring = document.getElementById('cur-ring');
-let mx=0, my=0, rx=0, ry=0;
-document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; dot.style.left=mx+'px'; dot.style.top=my+'px'; });
-(function loopRing(){ rx+=(mx-rx)*.12; ry+=(my-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(loopRing); })();
 
 /* ════════════════════════════════════════
    PRELOADER → HERO SEQUENCE
