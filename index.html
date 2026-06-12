@@ -182,7 +182,9 @@
     .reveal.in { opacity: 1; transform: translateY(0); }
 
     /* ──────────────────── ABOUT ──────────────────── */
-    #about { max-width: 820px; margin: 0 auto; }
+    #about { position: relative; overflow: hidden; }
+    .about-inner { max-width: 820px; margin: 0 auto; position: relative; z-index: 1; }
+    #about-bg-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
     .about-lead { margin-bottom: 52px; }
 
     .about-cats {
@@ -385,24 +387,27 @@
 
 <!-- ABOUT -->
 <section class="section" id="about">
-  <div class="reveal about-lead">
-    <p class="lbl">Who we are</p>
-    <h2 class="stitle">Things worth printing.<br>Designs worth keeping.</h2>
-    <p class="sbody">
-      Prism3D is a 3D printing brand built around objects that actually mean something —
-      playful toys, charming keychains, statement home décor, miniature models, and novelty bobbleheads,
-      all produced right here on our printers, layer by layer.
-    </p>
-    <p class="sbody" style="margin-top:1.2rem;">
-      We curate and craft our own range of designs — pieces made to sit on your shelf,
-      gift to someone, or just make you smile. Every product leaves our studio finished and ready to enjoy.
-      We're just getting started, and there's a lot more coming.
-    </p>
-  </div>
-  <div class="about-cats reveal">
-    <div class="acat"><span>◈</span><strong>Toys &amp; Figurines</strong></div>
-    <div class="acat"><span>⬡</span><strong>Keychains &amp; Accessories</strong></div>
-    <div class="acat"><span>◉</span><strong>Home Décor &amp; More</strong></div>
+  <canvas id="about-bg-canvas"></canvas>
+  <div class="about-inner">
+    <div class="reveal about-lead">
+      <p class="lbl">Who we are</p>
+      <h2 class="stitle">Things worth printing.<br>Designs worth keeping.</h2>
+      <p class="sbody">
+        Prism3D is a 3D printing brand built around objects that actually mean something —
+        playful toys, charming keychains, statement home décor, miniature models, and novelty bobbleheads,
+        all produced right here on our printers, layer by layer.
+      </p>
+      <p class="sbody" style="margin-top:1.2rem;">
+        We curate and craft our own range of designs — pieces made to sit on your shelf,
+        gift to someone, or just make you smile. Every product leaves our studio finished and ready to enjoy.
+        We're just getting started, and there's a lot more coming.
+      </p>
+    </div>
+    <div class="about-cats reveal">
+      <div class="acat"><span>◈</span><strong>Toys &amp; Figurines</strong></div>
+      <div class="acat"><span>⬡</span><strong>Keychains &amp; Accessories</strong></div>
+      <div class="acat"><span>◉</span><strong>Home Décor &amp; More</strong></div>
+    </div>
   </div>
 </section>
 
@@ -549,11 +554,11 @@ function drawPosterFrame(x,y,w,h,col,alpha){
 }
 
 const sils=[
-  {type:'bobble',rx:.10,ry:.28,s:92,a:0,   sp: .0005,col:'rgba(56,189,248,.5)', fw:120,fh:155},
-  {type:'vase',  rx:.88,ry:.30,s:86,a:.2,  sp:-.0004,col:'rgba(236,72,153,.5)', fw:100,fh:150},
-  {type:'star',  rx:.08,ry:.72,s:78,a:-.4, sp: .0007,col:'rgba(251,191,36,.5)', fw:100,fh:100},
-  {type:'trophy',rx:.88,ry:.70,s:84,a:.15, sp:-.0005,col:'rgba(251,191,36,.5)', fw:105,fh:140},
-  {type:'figure',rx:.50,ry:.09,s:76,a:0,   sp: .0006,col:'rgba(244,114,182,.5)',fw:95, fh:145},
+  {type:'bobble',rx:.06,ry:.22,s:92,a:0,   sp: .0005,col:'rgba(56,189,248,.5)', fw:120,fh:155},
+  {type:'vase',  rx:.17,ry:.70,s:86,a:.2,  sp:-.0004,col:'rgba(236,72,153,.5)', fw:100,fh:150},
+  {type:'star',  rx:.33,ry:.85,s:78,a:-.4, sp: .0007,col:'rgba(251,191,36,.5)', fw:100,fh:100},
+  {type:'trophy',rx:.05,ry:.52,s:84,a:.15, sp:-.0005,col:'rgba(251,191,36,.5)', fw:105,fh:140},
+  {type:'figure',rx:.27,ry:.10,s:76,a:0,   sp: .0006,col:'rgba(244,114,182,.5)',fw:95, fh:145},
 ];
 const flo=sils.map((_,i)=>i*1.3);
 
@@ -613,6 +618,107 @@ function heroLoop(){
   requestAnimationFrame(heroLoop);
 }
 heroLoop();
+
+/* ════════════════════════════════════════
+   ABOUT BG CANVAS
+════════════════════════════════════════ */
+(function(){
+  const ac = document.getElementById('about-bg-canvas');
+  const ax = ac.getContext('2d');
+  let AW, AH;
+
+  function resizeAbout(){
+    AW = ac.width  = ac.offsetWidth;
+    AH = ac.height = ac.offsetHeight;
+  }
+  resizeAbout();
+  window.addEventListener('resize', resizeAbout);
+
+  function ag(col){ ax.shadowBlur=18; ax.shadowColor=col; }
+  function ang(){ ax.shadowBlur=0; }
+
+  const aboutSils=[
+    {type:'figure', x:.06, y:.25, s:72, a:.2,  sp:.0004, col:'rgba(244,114,182,.55)', fw:88, fh:135},
+    {type:'vase',   x:.94, y:.20, s:68, a:-.15,sp:-.0003,col:'rgba(236,72,153,.55)',  fw:86, fh:130},
+    {type:'bobble', x:.04, y:.72, s:66, a:.1,  sp:.0005, col:'rgba(56,189,248,.55)',  fw:88, fh:120},
+    {type:'trophy', x:.96, y:.70, s:70, a:-.1, sp:-.0004,col:'rgba(251,191,36,.55)',  fw:90, fh:125},
+    {type:'star',   x:.50, y:.04, s:58, a:.3,  sp:.0006, col:'rgba(251,191,36,.45)',  fw:76, fh:76},
+  ];
+  const aflo = aboutSils.map((_,i)=>i*1.8);
+  let aTime=0;
+
+  function drawAboutSil(type,x,y,sc,angle,alpha){
+    ax.save(); ax.translate(x,y); ax.rotate(angle); ax.globalAlpha=alpha;
+    function p(pts,closed){
+      ax.beginPath();
+      pts.forEach((pt,i)=>i===0?ax.moveTo(pt[0]*sc,pt[1]*sc):ax.lineTo(pt[0]*sc,pt[1]*sc));
+      if(closed) ax.closePath(); ax.stroke();
+    }
+    ax.lineWidth=1.3;
+    if(type==='figure'){
+      ax.strokeStyle='rgba(244,114,182,1)'; ag('rgba(244,114,182,.4)');
+      ax.beginPath(); ax.arc(0,-0.36*sc,.18*sc,0,Math.PI*2); ax.stroke(); ang();
+      p([[-.05,-.19],[-.2,.12],[-.1,.48],[.1,.48],[.2,.12],[.05,-.19]],true);
+      p([[-.2,.12],[-.3,.38]],false); p([[.2,.12],[.3,.38]],false);
+    } else if(type==='vase'){
+      ax.strokeStyle='rgba(236,72,153,1)'; ag('rgba(236,72,153,.4)');
+      ax.beginPath();
+      ax.moveTo(-0.1*sc,-0.5*sc);
+      ax.bezierCurveTo(-0.3*sc,-0.22*sc,-0.42*sc,.08*sc,-0.24*sc,.44*sc);
+      ax.lineTo(.24*sc,.44*sc);
+      ax.bezierCurveTo(.42*sc,.08*sc,.3*sc,-0.22*sc,.1*sc,-0.5*sc);
+      ax.closePath(); ax.stroke(); ang();
+      ax.beginPath(); ax.ellipse(0,-0.5*sc,.12*sc,.035*sc,0,0,Math.PI*2); ax.stroke();
+      ax.beginPath(); ax.ellipse(0,.44*sc,.26*sc,.06*sc,0,0,Math.PI*2); ax.stroke();
+    } else if(type==='bobble'){
+      ax.strokeStyle='rgba(56,189,248,1)'; ag('rgba(56,189,248,.4)');
+      ax.beginPath(); ax.arc(0,-0.30*sc,.26*sc,0,Math.PI*2); ax.stroke(); ang();
+      p([[-0.08,-0.05],[-.15,.38],[.15,.38],[.08,-0.05]],true);
+      p([[-.18,.42],[.18,.42],[.14,.5],[-.14,.5]],true);
+    } else if(type==='trophy'){
+      ax.strokeStyle='rgba(251,191,36,1)'; ag('rgba(251,191,36,.4)');
+      p([[-.28,-.48],[-.32,.0],[.32,0],[.28,-.48]],true);
+      ax.beginPath(); ax.arc(-0.34*sc,-0.22*sc,.12*sc,Math.PI*.45,Math.PI*1.55); ax.stroke();
+      ax.beginPath(); ax.arc(.34*sc,-0.22*sc,.12*sc,-Math.PI*.55,Math.PI*.55); ax.stroke();
+      p([[-.13,.0],[-.2,.2],[-.3,.2],[-.3,.34],[.3,.34],[.3,.2],[.2,.2],[.13,.0]],false); ang();
+    } else if(type==='star'){
+      ax.strokeStyle='rgba(251,191,36,1)'; ag('rgba(251,191,36,.4)');
+      const pts5=[];
+      for(let i=0;i<10;i++){
+        const a2=(i*Math.PI/5)-Math.PI/2, r=i%2===0?.42:.18;
+        pts5.push([Math.cos(a2)*r,Math.sin(a2)*r]);
+      }
+      p(pts5,true); ang();
+    }
+    ang(); ax.restore();
+  }
+
+  function drawAboutFrame(x,y,w,h,col,alpha){
+    ax.save(); ax.globalAlpha=alpha*.7;
+    ax.strokeStyle=col; ax.lineWidth=.8;
+    ax.strokeRect(x-w/2,y-h/2,w,h);
+    const c=w*.14; ax.lineWidth=1.1;
+    [[x-w/2,y-h/2,c],[x+w/2,y-h/2,-c],[x-w/2,y+h/2,c],[x+w/2,y+h/2,-c]].forEach(([px,py,dx])=>{
+      ax.beginPath(); ax.moveTo(px,py+c); ax.lineTo(px,py); ax.lineTo(px+dx,py); ax.stroke();
+    });
+    ax.restore();
+  }
+
+  function aboutLoop(){
+    ax.clearRect(0,0,AW,AH);
+    aTime++;
+    const now=Date.now();
+    aboutSils.forEach((s,i)=>{
+      s.a+=s.sp;
+      const fy=Math.sin(now*.00038+aflo[i])*8;
+      const sx=s.x*AW, sy=s.y*AH+fy;
+      drawAboutFrame(sx,sy,s.fw,s.fh,s.col,.28);
+      drawAboutSil(s.type,sx,sy,s.s,s.a,.22);
+    });
+    requestAnimationFrame(aboutLoop);
+  }
+  aboutLoop();
+})();
 
 /* ════════════════════════════════════════
    SCROLL OBSERVERS
