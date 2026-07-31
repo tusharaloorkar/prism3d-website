@@ -446,9 +446,6 @@
       width: 100%; height: 100%; object-fit: cover;
       border-radius: 10px; border: 1px solid var(--border);
     }
-    .prod-desc {
-      font-size: clamp(.82rem, 1.6vw, .92rem); line-height: 1.6; color: var(--muted);
-    }
     .enquire-btn {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       padding: clamp(9px,1.4vw,12px) 18px; border-radius: 30px;
@@ -474,6 +471,14 @@
     }
     .soc-mini a.ig { background: linear-gradient(135deg,#f58529,#dd2a7b,#8134af,#515bd4); }
     .soc-mini a.fb { background: #1877f2; }
+    .restart-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 14px; padding: 10px 20px; border-radius: 30px;
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      font-family: var(--ff-mono); font-size: .68rem; letter-spacing: .1em;
+      cursor: pointer; transition: border-color .2s, color .2s, transform .2s;
+    }
+    .restart-btn:hover { border-color: var(--purple); color: var(--purple); transform: translateY(-2px); }
 
     .nav-btn {
       width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--border);
@@ -599,13 +604,17 @@
         <!-- Last page — Back cover -->
         <div class="page" id="pLast">
           <div class="face front cover-face">
-            <h2 class="back-cover-title">That's the collection<br>— for now.</h2>
-            <p class="cover-note" style="max-width:340px;">More designs are printing every week. Reach out and we'll help you pick the perfect piece.</p>
+            <h2 class="back-cover-title">Explore the<br>full catalog</h2>
+            <p class="cover-note" style="max-width:340px;">These are just our favourites. Browse everything — and request custom designs — on WhatsApp.</p>
             <div class="soc-mini">
               <a href="https://wa.me/918484080651" target="_blank" rel="noopener">WhatsApp</a>
               <a href="https://www.instagram.com/prism3d.in" target="_blank" rel="noopener" class="ig">Instagram</a>
               <a href="https://www.facebook.com/profile.php?id=61591418852121" target="_blank" rel="noopener" class="fb">Facebook</a>
             </div>
+            <button class="restart-btn" onclick="event.stopPropagation(); goToStart();">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              Back to Start
+            </button>
           </div>
           <div class="face back blank-back"><span>Prism3D</span></div>
         </div>
@@ -1118,7 +1127,6 @@ function prismImgFallback(img) {
         <div class="prod-imgs">
           <img class="prod-img" src="${imgBase}.jpg" data-base="${imgBase}" data-ext="0" alt="${p.title}" loading="lazy" onerror="prismImgFallback(this)">
         </div>
-        <p class="prod-desc">${p.desc}</p>
         <a href="${waLink(p)}" target="_blank" rel="noopener" class="enquire-btn" onclick="event.stopPropagation()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Enquire on WhatsApp
@@ -1168,6 +1176,14 @@ function prismImgFallback(img) {
     updateZ();
     updateUI();
   }
+
+  function goToStart() {
+    pages.forEach((p) => p.classList.remove('flipped'));
+    current = 0;
+    updateZ();
+    updateUI();
+  }
+  window.goToStart = goToStart;
 
   pages.forEach((p, i) => {
     p.addEventListener('click', () => {

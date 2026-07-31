@@ -15,12 +15,12 @@
 const WA_NUMBER = '918484080651';
 
 const PRODUCTS = [
-  { cat: 'Bobbleheads',  title: 'Custom Bobblehead',      desc: 'A hand-finished bobblehead sculpted in your likeness, printed layer by layer and painted by hand.', price: '₹899',  accent: '#0ea5e9' },
-  { cat: 'Keychains',    title: 'Mini Planet Keychain',   desc: 'A pocket-sized solar system charm for your keys or bag, in durable, vividly coloured PLA+.',        price: '₹149',  accent: '#38bdf8' },
-  { cat: 'Home Décor',   title: 'Faceted Bloom Vase',     desc: 'A geometric vase with a faceted silhouette — perfect for dried stems or as a standalone piece.',    price: '₹649',  accent: '#ec4899' },
-  { cat: 'Trophies',     title: 'Achievement Trophy',     desc: 'A custom mini trophy for the win that deserves a shelf spot. Engrave any name or date.',            price: '₹399',  accent: '#fbbf24' },
-  { cat: 'Toys',         title: 'Articulated Dragon',     desc: 'A flexible, print-in-place dragon that bends and poses right out of the printer, no assembly.',    price: '₹549',  accent: '#f9a8d4' },
-  { cat: 'Home Décor',   title: 'Star Nightlight',        desc: 'A soft-glow star lamp for the bedside table — USB powered, warm white LED included.',              price: '₹799',  accent: '#0ea5e9' },
-  { cat: 'Figurines',    title: 'Pet Portrait Figurine',  desc: "Turn your pet's photo into a miniature desk figurine, every detail hand-checked before shipping.", price: '₹1099', accent: '#38bdf8' },
-  { cat: 'Accessories',  title: 'Custom Nameplate',       desc: 'A desk or door nameplate in your choice of font and colour combination.',                         price: '₹349',  accent: '#ec4899' },
+  { cat: 'Pendant',  title: 'Angel Wings Pendant',      desc: 'A hand-finished bobblehead sculpted in your likeness, printed layer by layer and painted by hand.', price: '₹899',  accent: '#0ea5e9' },
+  { cat: 'Toy',    title: 'Mini Axolotls',   desc: 'A pocket-sized solar system charm for your keys or bag, in durable, vividly coloured PLA+.',        price: '₹149',  accent: '#38bdf8' },
+  { cat: 'Bookmark',   title: 'Dragon Bookmark',     desc: 'A geometric vase with a faceted silhouette — perfect for dried stems or as a standalone piece.',    price: '₹649',  accent: '#ec4899' },
+  { cat: 'Earrings',     title: 'Forget-me-not Earrings',     desc: 'A custom mini trophy for the win that deserves a shelf spot. Engrave any name or date.',            price: '₹399',  accent: '#fbbf24' },
+  { cat: 'Bracelet',         title: 'Thorned Rose Bracelet',     desc: 'A flexible, print-in-place dragon that bends and poses right out of the printer, no assembly.',    price: '₹549',  accent: '#f9a8d4' },
+  { cat: 'Hair Accessories',   title: 'Hair Brooch',        desc: 'A soft-glow star lamp for the bedside table — USB powered, warm white LED included.',              price: '₹799',  accent: '#0ea5e9' },
+  { cat: 'Figurines',    title: 'Fat Yawning Cat',  desc: "Turn your pet's photo into a miniature desk figurine, every detail hand-checked before shipping.", price: '₹1099', accent: '#38bdf8' },
+  { cat: 'Keychains',  title: 'Mini Hamster Keychain',       desc: 'A desk or door nameplate in your choice of font and colour combination.',                         price: '₹349',  accent: '#ec4899' },
 ];
