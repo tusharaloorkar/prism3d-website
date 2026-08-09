@@ -11,6 +11,10 @@
    2nd, and so on. jpg, jpeg, png, and webp all work; if a numbered file
    isn't found, that page just shows a placeholder box instead.
    Reordering products means renumbering their photos to match.
+
+   FEATURED: add `featured: true` to any product to show a "Bestseller"
+   badge on its card. Purely manual — set it on whichever products
+   actually sell best.
 ════════════════════════════════════════ */
 const WA_NUMBER = '918484080651';
 
@@ -36,11 +40,11 @@ const PRODUCTS = [
   { cat: 'Vase',        title: 'Leaf Vase',                                desc: 'Inspired by the gentle curves of unfolding leaves, this vase adds a soft organic feel to living rooms, bedrooms, and workspaces alike.', price: '₹505', accent: '#f9a8d4' },
   { cat: 'Vase',        title: 'Aesthetic Flower Vase',                    desc: 'With its flowing silhouette and contemporary style, this vase effortlessly elevates fresh blooms, dried flowers, or minimalist interiors.', price: '₹260', accent: '#ec4899' },
   { cat: 'Home',        title: 'Artistic Towel Mount (Pack of 4)',         desc: 'Who says towel holders have to be boring? This artistic mount combines practicality with modern design, turning an everyday necessity into a decorative feature.', price: '₹180', accent: '#fbbf24' },
-  { cat: 'Fidget Toy',  title: 'Baby Mushroom Clicker — Fidget Toy',       desc: 'Small enough for your pocket yet surprisingly satisfying, this mushroom clicker is perfect for relieving stress one click at a time.', price: '₹120', accent: '#0ea5e9' },
+  { cat: 'Fidget Toy',  title: 'Baby Mushroom Clicker — Fidget Toy',       desc: 'Small enough for your pocket yet surprisingly satisfying, this mushroom clicker is perfect for relieving stress one click at a time.', price: '₹120', accent: '#0ea5e9', featured: true },
   { cat: 'Keychain',    title: 'Tic Tac Toe Keychain',                     desc: "Enjoy a quick game wherever you are with this pocket-sized Tic Tac Toe keychain that's equal parts accessory and entertainment.", price: '₹100', accent: '#38bdf8' },
   { cat: 'Vase',        title: 'Trunk Vase',                               desc: 'Bring a touch of the forest into your home with the Trunk Vase, a nature-inspired design that transforms ordinary flower arrangements into eye-catching displays.', price: '₹150', accent: '#f9a8d4' },
   { cat: 'Fidget Toy',  title: 'Hexagon Twist Fidget Toy',                 desc: 'Twist, fold, and transform this geometric puzzle into endless configurations while enjoying a satisfying hands-on fidget experience.', price: '₹150', accent: '#ec4899' },
   { cat: 'Fidget Toy',  title: 'Gyro Fidget Spinner',                      desc: 'Designed for smooth, satisfying spins, this fidget spinner is perfect for moments when you need to stay focused, relax, or simply keep your hands occupied.', price: '₹150', accent: '#fbbf24' },
   { cat: 'Fidget Toy',  title: 'Multi Gears Fidget Spinner',               desc: "Watch interconnected gears move in harmony as you spin this unique fidget toy, creating a mesmerizing experience that's difficult to put down.", price: '₹240', accent: '#0ea5e9' },
-  { cat: 'Toy',         title: 'Cute Wobbly Penguin',                      desc: 'A gentle nudge is all it takes to bring this adorable penguin to life, making it a delightful companion for desks, shelves, and study tables.', price: '₹240', accent: '#38bdf8' },
+  { cat: 'Toy',         title: 'Cute Wobbly Penguin',                      desc: 'A gentle nudge is all it takes to bring this adorable penguin to life, making it a delightful companion for desks, shelves, and study tables.', price: '₹240', accent: '#38bdf8', featured: true },
 ];

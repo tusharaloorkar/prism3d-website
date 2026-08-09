@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4Y29RD1THE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4Y29RD1THE');
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prism3D — Crafted Layer by Layer</title>
@@ -381,6 +389,16 @@
       font-family: var(--ff-mono); font-size: .68rem; letter-spacing: .16em;
       text-transform: uppercase; color: rgba(241,245,249,.9);
       border: 1px solid rgba(241,245,249,.4); padding: 8px 16px; border-radius: 30px;
+    }
+    .flip-badge {
+      position: absolute; top: 10px; left: 10px; z-index: 2;
+      display: flex; align-items: center; gap: 4px;
+      padding: 5px 11px; border-radius: 30px;
+      background: linear-gradient(135deg, var(--gold), #f59e0b);
+      color: #1a1206;
+      font-family: var(--ff-mono); font-size: .58rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase;
+      box-shadow: 0 2px 10px rgba(0,0,0,.35);
     }
     .ph-img {
       position: absolute; inset: 0;
@@ -997,6 +1015,10 @@ function prismImgFallback(img) {
 (function(){
   const waLink = (p) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hi! I'd like to order: ${p.title} (${p.price}). Please confirm availability & payment details.`)}`;
 
+  function track(name, p) {
+    if (typeof gtag === 'function') gtag('event', name, { product_name: p.title, product_category: p.cat, price: p.price });
+  }
+
   const AUTO_UNFLIP_MS = 6000;
   function scheduleAutoUnflip(el) {
     clearTimeout(el._unflipTimer);
@@ -1011,6 +1033,7 @@ function prismImgFallback(img) {
     el.innerHTML = `
       <div class="flip-card-inner">
         <div class="flip-card-front" style="--accent:${p.accent}">
+          ${p.featured ? '<div class="flip-badge">★ Bestseller</div>' : ''}
           <img class="flip-img" src="${imgBase}.jpg" data-base="${imgBase}" data-ext="0" alt="${p.title}" loading="lazy" onerror="prismImgFallback(this)">
           <div class="flip-overlay"><span>Flip to know more</span></div>
         </div>
@@ -1036,15 +1059,17 @@ function prismImgFallback(img) {
       el.classList.toggle('flipped', willFlip);
       if (willFlip) {
         if (!isHovering) scheduleAutoUnflip(el); // still hovering: wait for mouseleave to start the clock
+        track('product_flip', p);
       } else {
         clearTimeout(el._unflipTimer);
       }
     });
-    el.addEventListener('mouseenter', () => { isHovering = true; clearTimeout(el._unflipTimer); });
+    el.addEventListener('mouseenter', () => { isHovering = true; clearTimeout(el._unflipTimer); track('product_hover', p); });
     el.addEventListener('mouseleave', () => {
       isHovering = false;
       if (el.classList.contains('flipped')) scheduleAutoUnflip(el);
     });
+    el.querySelector('.order-btn').addEventListener('click', () => track('order_click', p));
     container.appendChild(el);
   });
 })();
